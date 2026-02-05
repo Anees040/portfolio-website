@@ -75,8 +75,8 @@ export const PORTFOLIO_DATA: PortfolioData = {
     role: "Flutter Developer",
     tagline: "Crafting beautiful cross-platform mobile experiences with Flutter & Dart",
     bio: "I'm a passionate Flutter Developer specializing in building high-performance, cross-platform mobile applications. With expertise in Flutter, Dart, Firebase, and Node.js backend services, I create seamless user experiences that work flawlessly on both iOS and Android.",
-    location: "Your City, Country", // Update this
-    email: "your@email.com", // Update this
+    location: "Pakistan",
+    email: "aneesashfaq040@gmail.com",
     availableForWork: true,
   },
 
@@ -88,10 +88,9 @@ export const PORTFOLIO_DATA: PortfolioData = {
     },
     {
       platform: "LinkedIn",
-      url: "https://linkedin.com/in/yourusername", // Update this
-      username: "yourusername",
+      url: "https://linkedin.com/in/muhammad-anees",
+      username: "muhammad-anees",
     },
-    // Add more social links as needed
   ],
 
   skills: [

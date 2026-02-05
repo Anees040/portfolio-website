@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -13,13 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Your Name | Full Stack Developer",
-  description: "Full Stack Developer crafting elegant solutions with modern web technologies. View my portfolio to see projects and experience.",
-  keywords: ["Full Stack Developer", "Software Engineer", "React", "Next.js", "TypeScript"],
-  authors: [{ name: "Your Name" }],
+  title: "Muhammad Anees | Flutter Developer",
+  description: "Flutter Developer crafting beautiful cross-platform mobile experiences. Specializing in Flutter, Dart, Firebase, and Node.js.",
+  keywords: ["Flutter Developer", "Mobile App Developer", "Dart", "Firebase", "Cross-platform"],
+  authors: [{ name: "Muhammad Anees" }],
   openGraph: {
-    title: "Your Name | Full Stack Developer",
-    description: "Full Stack Developer crafting elegant solutions with modern web technologies.",
+    title: "Muhammad Anees | Flutter Developer",
+    description: "Flutter Developer crafting beautiful cross-platform mobile experiences.",
     type: "website",
   },
 };
@@ -30,11 +31,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className="scroll-smooth dark" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${geistMono.variable} antialiased bg-[#0a0a0a] text-white`}
+        className={`${inter.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

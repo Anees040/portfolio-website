@@ -3,10 +3,16 @@
 import { motion } from "framer-motion";
 import { ArrowDown, Github, Linkedin, Mail, FileText } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { PORTFOLIO_DATA } from "@/data/portfolio-data";
+import { useTheme } from "@/components/ThemeProvider";
 
 export default function Hero() {
   const { personalInfo, socialLinks } = PORTFOLIO_DATA;
+  const { theme } = useTheme();
+  
+  // Safe theme fallback for SSR
+  const safeTheme = theme || "dark";
 
   return (
     <section
@@ -15,16 +21,50 @@ export default function Hero() {
     >
       {/* Content */}
       <div className="relative z-10 text-center max-w-5xl mx-auto flex flex-col items-center justify-center">
-        {/* Badge */}
+        {/* Profile Image */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="mb-6"
+        >
+          <div className={`relative w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-2 ${
+            safeTheme === 'dark' ? 'border-cyan-500/30' : 'border-blue-500/30'
+          } shadow-lg ${
+            safeTheme === 'dark' ? 'shadow-cyan-500/20' : 'shadow-blue-500/20'
+          }`}>
+            {/* Replace src with your actual profile image */}
+            <div className={`w-full h-full flex items-center justify-center text-4xl ${
+              safeTheme === 'dark' ? 'bg-gradient-to-br from-cyan-500/20 to-purple-500/20' : 'bg-gradient-to-br from-blue-500/10 to-purple-500/10'
+            }`}>
+              <span>👨‍💻</span>
+            </div>
+            {/* Uncomment when you have a profile image:
+            <Image
+              src="/profile.jpg"
+              alt={personalInfo.name}
+              fill
+              className="object-cover"
+              priority
+            />
+            */}
+          </div>
+        </motion.div>
+
+        {/* Availability Badge - Subtle */}
         {personalInfo.availableForWork && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/20 mb-8"
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-6 text-xs ${
+              safeTheme === 'dark'
+                ? 'bg-green-500/10 border border-green-500/20 text-green-400'
+                : 'bg-green-500/10 border border-green-500/20 text-green-600'
+            }`}
           >
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-sm text-gray-300">Available for opportunities</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            <span>Open to opportunities</span>
           </motion.div>
         )}
 
@@ -32,10 +72,12 @@ export default function Hero() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-6"
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className="mb-4"
         >
-          <p className="text-lg md:text-xl text-gray-400 mb-2 font-light tracking-wide">
+          <p className={`text-base md:text-lg mb-2 font-light tracking-wide ${
+            safeTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+          }`}>
             Hello World, I&apos;m
           </p>
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold gradient-text">
@@ -47,10 +89,14 @@ export default function Hero() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.15 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
           className="mb-6"
         >
-          <span className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-cyan-400 text-sm font-medium">
+          <span className={`px-4 py-2 rounded-full text-sm font-medium ${
+            safeTheme === 'dark'
+              ? 'bg-white/5 border border-white/10 text-cyan-400'
+              : 'bg-blue-500/10 border border-blue-500/20 text-blue-600'
+          }`}>
             {personalInfo.role}
           </span>
         </motion.div>
@@ -59,8 +105,10 @@ export default function Hero() {
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl mx-auto font-light leading-relaxed"
+          transition={{ duration: 0.5, delay: 0.25 }}
+          className={`text-lg md:text-xl mb-10 max-w-2xl mx-auto font-light leading-relaxed ${
+            safeTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+          }`}
         >
           {personalInfo.tagline}
         </motion.p>
