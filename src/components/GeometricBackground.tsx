@@ -1,18 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
+import { useTheme } from "./ThemeProvider";
 
-// Constants - hexagon geometry
-const HEX_SIZE = 80;
+// Hexagon configuration - larger hexagons like reference image
+const HEX_SIZE = 140; // Radius for larger hexagons
+const CORNER_RADIUS = 14; // Rounded corners
 const HEX_HEIGHT = HEX_SIZE * Math.sqrt(3);
-const HORIZONTAL_SPACING = HEX_SIZE * 1.5;
-const VERTICAL_SPACING = HEX_HEIGHT;
+const HEX_WIDTH = HEX_SIZE * 2;
+const HORIZONTAL_SPACING = HEX_WIDTH * 0.78;
+const VERTICAL_SPACING = HEX_HEIGHT * 0.52;
 
-// Animation constants
-const PROXIMITY_THRESHOLD = HEX_SIZE * 1.2;
-const MAX_INTENSITY = 0.6;
-const FADE_SPEED = 0.03; // How fast light fades when pointer leaves
-const GROW_SPEED = 0.08; // How fast light grows when pointer is near
+// POINTER-DRIVEN animation constants - NO time-based completion
+const PROXIMITY_THRESHOLD = HEX_SIZE * 2.2;
+const GLOW_FADE_SPEED = 0.06; // Per-frame fade when pointer leaves
+const GLOW_GROW_SPEED = 0.1; // Per-frame grow when pointer near
+const MAX_GLOW_INTENSITY = 0.55;
+const VELOCITY_MULTIPLIER = 0.012;
+const BASE_STROKE_OPACITY = 0.055;
 
 interface Point {
   x: number;
@@ -23,21 +28,20 @@ interface HexCell {
   id: string;
   center: Point;
   vertices: Point[];
+  roundedPath: Path2D;
+  // Pointer-driven state (NO time-based fields)
+  glowIntensity: number;
+  targetIntensity: number;
+  entryPoint: number;
+  clockwiseGlow: number;
+  counterClockwiseGlow: number;
 }
 
-interface LightState {
-  hexId: string;
-  intensity: number; // 0-1, derived from pointer proximity
-  headPosition: number; // 0-1, position along path
-  tailPosition: number; // 0-1, trailing edge
-  clockwise: number; // head position clockwise
-  counterClockwise: number; // head position counter-clockwise
-}
-
+// Generate hexagon vertices (flat-top orientation)
 function generateHexVertices(cx: number, cy: number, size: number): Point[] {
   const vertices: Point[] = [];
   for (let i = 0; i < 6; i++) {
-    const angle = (Math.PI / 3) * i - Math.PI / 2;
+    const angle = (Math.PI / 3) * i - Math.PI / 6;
     vertices.push({
       x: cx + size * Math.cos(angle),
       y: cy + size * Math.sin(angle),
@@ -46,257 +50,308 @@ function generateHexVertices(cx: number, cy: number, size: number): Point[] {
   return vertices;
 }
 
-function pointInHexagon(point: Point, center: Point, size: number): boolean {
-  const dx = Math.abs(point.x - center.x);
-  const dy = Math.abs(point.y - center.y);
-  const hexHeight = size * Math.sqrt(3) / 2;
-  if (dx > size || dy > hexHeight) return false;
-  return size * hexHeight - hexHeight * dx - size * dy / 2 >= 0;
-}
-
-function distanceToHexCenter(point: Point, center: Point): number {
-  return Math.sqrt(Math.pow(point.x - center.x, 2) + Math.pow(point.y - center.y, 2));
-}
-
-function findClosestEdgeOffset(point: Point, vertices: Point[]): number {
-  const sideLength = Math.sqrt(
-    Math.pow(vertices[1].x - vertices[0].x, 2) +
-    Math.pow(vertices[1].y - vertices[0].y, 2)
-  );
-  const totalLength = 6 * sideLength;
+// Create rounded hexagon path for smooth corners
+function createRoundedHexPath(vertices: Point[], radius: number): Path2D {
+  const path = new Path2D();
+  const n = vertices.length;
   
-  let minDist = Infinity;
-  let closestOffset = 0;
-  
-  for (let i = 0; i < 6; i++) {
-    const v1 = vertices[i];
-    const v2 = vertices[(i + 1) % 6];
-    const edgeVec = { x: v2.x - v1.x, y: v2.y - v1.y };
-    const pointVec = { x: point.x - v1.x, y: point.y - v1.y };
-    const edgeLen = Math.sqrt(edgeVec.x * edgeVec.x + edgeVec.y * edgeVec.y);
-    const t = Math.max(0, Math.min(1, (pointVec.x * edgeVec.x + pointVec.y * edgeVec.y) / (edgeLen * edgeLen)));
+  for (let i = 0; i < n; i++) {
+    const curr = vertices[i];
+    const next = vertices[(i + 1) % n];
+    const prev = vertices[(i + n - 1) % n];
     
-    const closest = { x: v1.x + t * edgeVec.x, y: v1.y + t * edgeVec.y };
-    const dist = Math.sqrt(Math.pow(point.x - closest.x, 2) + Math.pow(point.y - closest.y, 2));
+    const toPrev = { x: prev.x - curr.x, y: prev.y - curr.y };
+    const toNext = { x: next.x - curr.x, y: next.y - curr.y };
+    
+    const lenPrev = Math.sqrt(toPrev.x ** 2 + toPrev.y ** 2);
+    const lenNext = Math.sqrt(toNext.x ** 2 + toNext.y ** 2);
+    
+    const normPrev = { x: toPrev.x / lenPrev, y: toPrev.y / lenPrev };
+    const normNext = { x: toNext.x / lenNext, y: toNext.y / lenNext };
+    
+    const r = Math.min(radius, lenPrev / 3, lenNext / 3);
+    const startCorner = { x: curr.x + normPrev.x * r, y: curr.y + normPrev.y * r };
+    const endCorner = { x: curr.x + normNext.x * r, y: curr.y + normNext.y * r };
+    
+    if (i === 0) {
+      path.moveTo(startCorner.x, startCorner.y);
+    } else {
+      path.lineTo(startCorner.x, startCorner.y);
+    }
+    
+    path.quadraticCurveTo(curr.x, curr.y, endCorner.x, endCorner.y);
+  }
+  
+  path.closePath();
+  return path;
+}
+
+function distanceToCenter(point: Point, center: Point): number {
+  return Math.sqrt((point.x - center.x) ** 2 + (point.y - center.y) ** 2);
+}
+
+function findClosestEdgePosition(point: Point, vertices: Point[]): number {
+  let minDist = Infinity;
+  let closestPosition = 0;
+  const n = vertices.length;
+  let accumulated = 0;
+  let totalPerimeter = 0;
+  
+  for (let i = 0; i < n; i++) {
+    const v1 = vertices[i];
+    const v2 = vertices[(i + 1) % n];
+    totalPerimeter += Math.sqrt((v2.x - v1.x) ** 2 + (v2.y - v1.y) ** 2);
+  }
+  
+  for (let i = 0; i < n; i++) {
+    const v1 = vertices[i];
+    const v2 = vertices[(i + 1) % n];
+    const edgeLen = Math.sqrt((v2.x - v1.x) ** 2 + (v2.y - v1.y) ** 2);
+    
+    const edge = { x: v2.x - v1.x, y: v2.y - v1.y };
+    const toPoint = { x: point.x - v1.x, y: point.y - v1.y };
+    const t = Math.max(0, Math.min(1, (toPoint.x * edge.x + toPoint.y * edge.y) / (edgeLen ** 2)));
+    
+    const closest = { x: v1.x + t * edge.x, y: v1.y + t * edge.y };
+    const dist = Math.sqrt((point.x - closest.x) ** 2 + (point.y - closest.y) ** 2);
     
     if (dist < minDist) {
       minDist = dist;
-      closestOffset = (i * sideLength + t * sideLength) / totalLength;
+      closestPosition = (accumulated + t * edgeLen) / totalPerimeter;
     }
+    
+    accumulated += edgeLen;
   }
   
-  return closestOffset;
+  return closestPosition;
 }
 
-function getPointOnPath(vertices: Point[], offset: number): Point {
-  let normalizedOffset = offset % 1;
-  if (normalizedOffset < 0) normalizedOffset += 1;
+function getPointOnPerimeter(vertices: Point[], position: number): Point {
+  const n = vertices.length;
+  let totalPerimeter = 0;
+  const edgeLengths: number[] = [];
   
-  const sideLength = Math.sqrt(
-    Math.pow(vertices[1].x - vertices[0].x, 2) +
-    Math.pow(vertices[1].y - vertices[0].y, 2)
-  );
-  const totalLength = 6 * sideLength;
-  const targetLength = normalizedOffset * totalLength;
-  
-  let accumulated = 0;
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < n; i++) {
     const v1 = vertices[i];
-    const v2 = vertices[(i + 1) % 6];
-    if (accumulated + sideLength >= targetLength) {
-      const t = (targetLength - accumulated) / sideLength;
+    const v2 = vertices[(i + 1) % n];
+    const len = Math.sqrt((v2.x - v1.x) ** 2 + (v2.y - v1.y) ** 2);
+    edgeLengths.push(len);
+    totalPerimeter += len;
+  }
+  
+  let normalizedPos = ((position % 1) + 1) % 1;
+  let targetDist = normalizedPos * totalPerimeter;
+  let accumulated = 0;
+  
+  for (let i = 0; i < n; i++) {
+    if (accumulated + edgeLengths[i] >= targetDist) {
+      const t = (targetDist - accumulated) / edgeLengths[i];
+      const v1 = vertices[i];
+      const v2 = vertices[(i + 1) % n];
       return {
         x: v1.x + t * (v2.x - v1.x),
         y: v1.y + t * (v2.y - v1.y),
       };
     }
-    accumulated += sideLength;
+    accumulated += edgeLengths[i];
   }
+  
   return vertices[0];
 }
 
 export default function GeometricBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hexGridRef = useRef<HexCell[]>([]);
-  const pointerRef = useRef<Point>({ x: -1000, y: -1000 });
-  const prevPointerRef = useRef<Point>({ x: -1000, y: -1000 });
-  const lightStatesRef = useRef<Map<string, LightState>>(new Map());
+  const pointerRef = useRef<Point>({ x: -9999, y: -9999 });
+  const pointerVelocityRef = useRef<Point>({ x: 0, y: 0 });
+  const prevPointerRef = useRef<Point>({ x: -9999, y: -9999 });
   const rafRef = useRef<number | null>(null);
-  const themeRef = useRef<'dark' | 'light'>('dark');
+  const lastTimeRef = useRef(0);
+  const { theme } = useTheme();
+  const themeRef = useRef(theme);
+  
+  useEffect(() => {
+    themeRef.current = theme;
+  }, [theme]);
 
-  // Generate hexagonal grid
   const generateGrid = useCallback((width: number, height: number): HexCell[] => {
     const grid: HexCell[] = [];
-    const cols = Math.ceil(width / HORIZONTAL_SPACING) + 2;
-    const rows = Math.ceil(height / (VERTICAL_SPACING * 0.5)) + 2;
+    const cols = Math.ceil(width / HORIZONTAL_SPACING) + 3;
+    const rows = Math.ceil(height / VERTICAL_SPACING) + 3;
     
     for (let row = -1; row < rows; row++) {
       for (let col = -1; col < cols; col++) {
         const isOffsetRow = row % 2 === 1;
         const cx = col * HORIZONTAL_SPACING + (isOffsetRow ? HORIZONTAL_SPACING / 2 : 0);
-        const cy = row * VERTICAL_SPACING * 0.5 + HEX_SIZE;
+        const cy = row * VERTICAL_SPACING;
+        
+        const vertices = generateHexVertices(cx, cy, HEX_SIZE);
+        const roundedPath = createRoundedHexPath(vertices, CORNER_RADIUS);
         
         grid.push({
           id: `hex-${row}-${col}`,
           center: { x: cx, y: cy },
-          vertices: generateHexVertices(cx, cy, HEX_SIZE),
+          vertices,
+          roundedPath,
+          glowIntensity: 0,
+          targetIntensity: 0,
+          entryPoint: 0,
+          clockwiseGlow: 0,
+          counterClockwiseGlow: 0,
         });
       }
     }
+    
     return grid;
   }, []);
 
-  // Main render loop - pointer-state driven
-  const render = useCallback(() => {
+  // PURELY POINTER-DRIVEN render loop - animations live/die by pointer state
+  const render = useCallback((time: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    // Check theme from document
-    const isDark = !document.documentElement.classList.contains('light');
-    themeRef.current = isDark ? 'dark' : 'light';
     
-    // Calculate pointer velocity
+    const deltaTime = Math.min(time - lastTimeRef.current, 50);
+    lastTimeRef.current = time;
+    const dtFactor = deltaTime / 16.67;
+    
+    // Smooth velocity tracking
     const dx = pointerRef.current.x - prevPointerRef.current.x;
     const dy = pointerRef.current.y - prevPointerRef.current.y;
-    const velocity = Math.sqrt(dx * dx + dy * dy);
+    pointerVelocityRef.current = {
+      x: pointerVelocityRef.current.x * 0.65 + dx * 0.35,
+      y: pointerVelocityRef.current.y * 0.65 + dy * 0.35,
+    };
     prevPointerRef.current = { ...pointerRef.current };
     
-    // Clear canvas
+    const speed = Math.sqrt(
+      pointerVelocityRef.current.x ** 2 + 
+      pointerVelocityRef.current.y ** 2
+    );
+    
+    const isDark = themeRef.current === "dark";
+    
+    // Clear and draw background
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Draw gradient background
-    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-    if (themeRef.current === 'dark') {
-      gradient.addColorStop(0, "#0B0F1A");
-      gradient.addColorStop(0.5, "#0E1624");
-      gradient.addColorStop(1, "#0B0F1A");
+    if (isDark) {
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradient.addColorStop(0, "#0a0f1a");
+      gradient.addColorStop(0.35, "#0c1320");
+      gradient.addColorStop(0.65, "#0b111c");
+      gradient.addColorStop(1, "#0a0f1a");
+      ctx.fillStyle = gradient;
     } else {
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
       gradient.addColorStop(0, "#f8fafc");
       gradient.addColorStop(0.5, "#f1f5f9");
       gradient.addColorStop(1, "#f8fafc");
+      ctx.fillStyle = gradient;
     }
-    ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Process each hexagon
+    // Update each hexagon - POINTER-DRIVEN, no time-based completion
     for (const hex of hexGridRef.current) {
-      const distance = distanceToHexCenter(pointerRef.current, hex.center);
-      const isPointerInside = pointInHexagon(pointerRef.current, hex.center, HEX_SIZE);
-      const isPointerNear = distance < PROXIMITY_THRESHOLD;
+      const dist = distanceToCenter(pointerRef.current, hex.center);
+      const isInProximity = dist < PROXIMITY_THRESHOLD;
       
-      // Get or create light state
-      let lightState = lightStatesRef.current.get(hex.id);
-      
-      if (isPointerNear || isPointerInside) {
-        // Calculate target intensity based on proximity
-        const proximityFactor = 1 - Math.min(distance / PROXIMITY_THRESHOLD, 1);
-        const velocityBonus = Math.min(velocity / 30, 0.4);
-        const targetIntensity = Math.min(proximityFactor * 0.8 + velocityBonus, MAX_INTENSITY);
-        
-        if (!lightState) {
-          // Create new light state
-          const entryOffset = findClosestEdgeOffset(pointerRef.current, hex.vertices);
-          lightState = {
-            hexId: hex.id,
-            intensity: 0.1,
-            headPosition: entryOffset,
-            tailPosition: entryOffset,
-            clockwise: entryOffset,
-            counterClockwise: entryOffset,
-          };
-          lightStatesRef.current.set(hex.id, lightState);
-        }
-        
-        // Grow intensity toward target
-        lightState.intensity += (targetIntensity - lightState.intensity) * GROW_SPEED;
-        
-        // Advance light heads based on velocity
-        const advance = 0.003 + (velocity / 500) * 0.01;
-        lightState.clockwise = (lightState.clockwise + advance) % 1;
-        lightState.counterClockwise = (lightState.counterClockwise - advance + 1) % 1;
-        
-      } else if (lightState) {
-        // Pointer left - fade immediately
-        lightState.intensity *= (1 - FADE_SPEED);
-        
-        // Remove if faded
-        if (lightState.intensity < 0.01) {
-          lightStatesRef.current.delete(hex.id);
-          lightState = undefined;
-        }
+      // Target intensity derived ONLY from current pointer state
+      if (isInProximity) {
+        const proximityFactor = 1 - (dist / PROXIMITY_THRESHOLD);
+        const velocityBoost = Math.min(speed * VELOCITY_MULTIPLIER, 0.35);
+        hex.targetIntensity = Math.min(
+          (proximityFactor * 0.5 + velocityBoost) * MAX_GLOW_INTENSITY,
+          MAX_GLOW_INTENSITY
+        );
+        hex.entryPoint = findClosestEdgePosition(pointerRef.current, hex.vertices);
+      } else {
+        // Pointer left - begin immediate fade
+        hex.targetIntensity = 0;
       }
       
-      // Draw base hexagon stroke
-      ctx.beginPath();
-      ctx.moveTo(hex.vertices[0].x, hex.vertices[0].y);
-      for (let i = 1; i < 6; i++) {
-        ctx.lineTo(hex.vertices[i].x, hex.vertices[i].y);
-      }
-      ctx.closePath();
-      ctx.strokeStyle = themeRef.current === 'dark' 
-        ? "rgba(255, 255, 255, 0.05)" 
-        : "rgba(30, 58, 95, 0.08)";
-      ctx.lineWidth = 0.5;
-      ctx.stroke();
+      // Smooth interpolation - intensity follows target
+      const isGrowing = hex.targetIntensity > hex.glowIntensity;
+      const interpSpeed = isGrowing ? GLOW_GROW_SPEED : GLOW_FADE_SPEED;
+      hex.glowIntensity += (hex.targetIntensity - hex.glowIntensity) * interpSpeed * dtFactor;
       
-      // Draw light effect if active
-      if (lightState && lightState.intensity > 0.01) {
-        const glowColor = themeRef.current === 'dark'
-          ? `rgba(56, 189, 248, ${lightState.intensity})`
-          : `rgba(37, 99, 235, ${lightState.intensity * 0.7})`;
+      if (hex.glowIntensity < 0.002) hex.glowIntensity = 0;
+      
+      // Bi-directional glow spread - also pointer-driven
+      if (hex.glowIntensity > 0.01) {
+        const spreadSpeed = 0.018 * (1 + speed * 0.008) * dtFactor;
+        const maxSpread = 0.12 + hex.glowIntensity * 0.12;
         
-        // Draw clockwise trail
-        drawLightTrail(ctx, hex.vertices, lightState.clockwise, 0.08, glowColor, lightState.intensity);
+        if (hex.targetIntensity > 0) {
+          hex.clockwiseGlow = Math.min(hex.clockwiseGlow + spreadSpeed, maxSpread);
+          hex.counterClockwiseGlow = Math.min(hex.counterClockwiseGlow + spreadSpeed, maxSpread);
+        } else {
+          // Shrink when pointer leaves
+          hex.clockwiseGlow *= (1 - 0.08 * dtFactor);
+          hex.counterClockwiseGlow *= (1 - 0.08 * dtFactor);
+        }
+      } else {
+        hex.clockwiseGlow = 0;
+        hex.counterClockwiseGlow = 0;
+      }
+      
+      // Draw hexagon stroke
+      ctx.strokeStyle = isDark 
+        ? `rgba(90, 140, 190, ${BASE_STROKE_OPACITY})`
+        : `rgba(100, 130, 170, ${BASE_STROKE_OPACITY * 0.7})`;
+      ctx.lineWidth = 1;
+      ctx.stroke(hex.roundedPath);
+      
+      // Draw glow if active
+      if (hex.glowIntensity > 0.01) {
+        const glowColor = isDark 
+          ? `rgba(56, 189, 248, ${hex.glowIntensity})`
+          : `rgba(37, 99, 235, ${hex.glowIntensity * 0.7})`;
         
-        // Draw counter-clockwise trail  
-        drawLightTrail(ctx, hex.vertices, lightState.counterClockwise, -0.08, glowColor, lightState.intensity);
+        ctx.strokeStyle = glowColor;
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = "round";
+        ctx.shadowColor = isDark 
+          ? `rgba(56, 189, 248, ${hex.glowIntensity * 0.5})`
+          : `rgba(37, 99, 235, ${hex.glowIntensity * 0.35})`;
+        ctx.shadowBlur = 10;
+        
+        // Clockwise trail
+        if (hex.clockwiseGlow > 0.004) {
+          ctx.beginPath();
+          const segments = 12;
+          for (let i = 0; i <= segments; i++) {
+            const t = i / segments;
+            const pos = hex.entryPoint + t * hex.clockwiseGlow;
+            const point = getPointOnPerimeter(hex.vertices, pos);
+            if (i === 0) ctx.moveTo(point.x, point.y);
+            else ctx.lineTo(point.x, point.y);
+          }
+          ctx.stroke();
+        }
+        
+        // Counter-clockwise trail
+        if (hex.counterClockwiseGlow > 0.004) {
+          ctx.beginPath();
+          const segments = 12;
+          for (let i = 0; i <= segments; i++) {
+            const t = i / segments;
+            const pos = hex.entryPoint - t * hex.counterClockwiseGlow;
+            const point = getPointOnPerimeter(hex.vertices, pos);
+            if (i === 0) ctx.moveTo(point.x, point.y);
+            else ctx.lineTo(point.x, point.y);
+          }
+          ctx.stroke();
+        }
+        
+        ctx.shadowBlur = 0;
       }
     }
     
     rafRef.current = requestAnimationFrame(render);
   }, []);
 
-  function drawLightTrail(
-    ctx: CanvasRenderingContext2D,
-    vertices: Point[],
-    headOffset: number,
-    trailLength: number,
-    color: string,
-    intensity: number
-  ) {
-    const steps = 12;
-    const points: Point[] = [];
-    
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps;
-      const offset = headOffset - t * trailLength;
-      points.push(getPointOnPath(vertices, offset));
-    }
-    
-    if (points.length < 2) return;
-    
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(points[i].x, points[i].y);
-    }
-    
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2 + intensity;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    
-    // Glow effect
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 6 + intensity * 8;
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-  }
-
-  // Initialize
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -312,7 +367,8 @@ export default function GeometricBackground() {
     };
 
     const handlePointerLeave = () => {
-      pointerRef.current = { x: -1000, y: -1000 };
+      pointerRef.current = { x: -9999, y: -9999 };
+      pointerVelocityRef.current = { x: 0, y: 0 };
     };
 
     handleResize();
@@ -334,6 +390,7 @@ export default function GeometricBackground() {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none z-0"
+      style={{ touchAction: "none" }}
     />
   );
 }

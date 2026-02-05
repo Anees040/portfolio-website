@@ -3,25 +3,21 @@
 import { motion } from "framer-motion";
 import { MapPin, Briefcase, GraduationCap, Calendar } from "lucide-react";
 import SpotlightCard from "@/components/SpotlightCard";
+import { useTheme } from "@/components/ThemeProvider";
+import { PORTFOLIO_DATA } from "@/data/portfolio-data";
 
 const experiences = [
   {
     company: "Company Name",
-    role: "Software Engineer",
+    role: "Flutter Developer",
     period: "Jan 2024 - Present",
     logo: "🏢",
   },
   {
     company: "Previous Company",
-    role: "Software Engineer",
+    role: "Mobile Developer",
     period: "Nov 2022 - Jan 2024",
     logo: "💼",
-  },
-  {
-    company: "Another Company",
-    role: "Software Developer",
-    period: "Feb 2022 - Nov 2022",
-    logo: "🚀",
   },
 ];
 
@@ -33,6 +29,10 @@ const education = {
 };
 
 export default function About() {
+  const { theme } = useTheme();
+  const safeTheme = theme || "dark";
+  const { personalInfo } = PORTFOLIO_DATA;
+
   return (
     <section id="about" className="section">
       <div className="max-w-6xl mx-auto">
@@ -43,10 +43,10 @@ export default function About() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl md:text-5xl font-bold mb-4">
+          <h2 className={`text-3xl md:text-5xl font-bold mb-4 ${safeTheme === 'dark' ? 'text-white' : 'text-zinc-900'}`}>
             About <span className="gradient-text">Me</span>
           </h2>
-          <p className="text-gray-400 max-w-2xl mx-auto">
+          <p className={`max-w-2xl mx-auto ${safeTheme === 'dark' ? 'text-gray-400' : 'text-zinc-600'}`}>
             A passionate developer with a love for creating impactful solutions
           </p>
         </motion.div>
@@ -65,38 +65,30 @@ export default function About() {
                   👋
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-white">Your Name</h3>
-                  <p className="text-cyan-400">Full Stack Developer</p>
-                  <div className="flex items-center gap-2 text-gray-400 text-sm mt-1">
+                  <h3 className={`text-2xl font-bold ${safeTheme === 'dark' ? 'text-white' : 'text-zinc-900'}`}>
+                    {personalInfo.name}
+                  </h3>
+                  <p className={safeTheme === 'dark' ? 'text-cyan-400' : 'text-blue-600'}>
+                    {personalInfo.role}
+                  </p>
+                  <div className={`flex items-center gap-2 text-sm mt-1 ${safeTheme === 'dark' ? 'text-gray-400' : 'text-zinc-500'}`}>
                     <MapPin className="w-4 h-4" />
-                    <span>Your Location</span>
+                    <span>{personalInfo.location}</span>
                   </div>
                 </div>
               </div>
               
-              <p className="text-gray-300 leading-relaxed mb-4">
-                I&apos;m a Software Engineer with{" "}
-                <span className="text-white font-semibold">X years of experience</span>,
-                currently working on building scalable systems and solving
-                complex challenges across various products.
-              </p>
-              
-              <p className="text-gray-300 leading-relaxed">
-                I hold a{" "}
-                <span className="text-white font-semibold">
-                  Bachelor&apos;s degree in Computer Science
-                </span>{" "}
-                and I&apos;m passionate about exploring new technologies and
-                building products that make a difference.
+              <p className={`leading-relaxed mb-4 ${safeTheme === 'dark' ? 'text-gray-300' : 'text-zinc-600'}`}>
+                {personalInfo.bio}
               </p>
             </SpotlightCard>
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4">
               {[
-                { value: "X+", label: "Years Experience" },
-                { value: "XX+", label: "Projects Completed" },
-                { value: "XXX+", label: "GitHub Contributions" },
+                { value: "2+", label: "Years Experience" },
+                { value: "15+", label: "Projects Completed" },
+                { value: "200+", label: "GitHub Contributions" },
               ].map((stat, index) => (
                 <motion.div
                   key={stat.label}
@@ -104,12 +96,18 @@ export default function About() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
-                  className="glass rounded-xl p-4 text-center"
+                  className={`rounded-xl p-4 text-center ${
+                    safeTheme === 'dark' 
+                      ? 'glass' 
+                      : 'bg-white border border-zinc-200 shadow-sm'
+                  }`}
                 >
                   <div className="text-2xl md:text-3xl font-bold gradient-text">
                     {stat.value}
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">{stat.label}</div>
+                  <div className={`text-xs mt-1 ${safeTheme === 'dark' ? 'text-gray-400' : 'text-zinc-500'}`}>
+                    {stat.label}
+                  </div>
                 </motion.div>
               ))}
             </div>
@@ -125,8 +123,10 @@ export default function About() {
             {/* Work Experience */}
             <SpotlightCard className="p-6">
               <div className="flex items-center gap-2 mb-6">
-                <Briefcase className="w-5 h-5 text-cyan-400" />
-                <h3 className="text-xl font-bold text-white">Work Experience</h3>
+                <Briefcase className={safeTheme === 'dark' ? 'w-5 h-5 text-cyan-400' : 'w-5 h-5 text-blue-600'} />
+                <h3 className={`text-xl font-bold ${safeTheme === 'dark' ? 'text-white' : 'text-zinc-900'}`}>
+                  Work Experience
+                </h3>
               </div>
               
               <div className="space-y-4">
@@ -137,16 +137,24 @@ export default function About() {
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.1 }}
-                    className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors"
+                    className={`flex items-center gap-4 p-3 rounded-xl transition-colors ${
+                      safeTheme === 'dark' ? 'hover:bg-white/5' : 'hover:bg-zinc-50'
+                    }`}
                   >
-                    <div className="w-12 h-12 rounded-xl bg-[#1a1a1a] flex items-center justify-center text-2xl">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${
+                      safeTheme === 'dark' ? 'bg-[#1a1a1a]' : 'bg-zinc-100'
+                    }`}>
                       {exp.logo}
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-white">{exp.company}</h4>
-                      <p className="text-sm text-gray-400">{exp.role}</p>
+                      <h4 className={`font-semibold ${safeTheme === 'dark' ? 'text-white' : 'text-zinc-900'}`}>
+                        {exp.company}
+                      </h4>
+                      <p className={`text-sm ${safeTheme === 'dark' ? 'text-gray-400' : 'text-zinc-500'}`}>
+                        {exp.role}
+                      </p>
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <div className={`flex items-center gap-1 text-xs ${safeTheme === 'dark' ? 'text-gray-500' : 'text-zinc-400'}`}>
                       <Calendar className="w-3 h-3" />
                       {exp.period}
                     </div>
@@ -158,19 +166,29 @@ export default function About() {
             {/* Education */}
             <SpotlightCard className="p-6">
               <div className="flex items-center gap-2 mb-6">
-                <GraduationCap className="w-5 h-5 text-purple-400" />
-                <h3 className="text-xl font-bold text-white">Education</h3>
+                <GraduationCap className={safeTheme === 'dark' ? 'w-5 h-5 text-purple-400' : 'w-5 h-5 text-purple-600'} />
+                <h3 className={`text-xl font-bold ${safeTheme === 'dark' ? 'text-white' : 'text-zinc-900'}`}>
+                  Education
+                </h3>
               </div>
               
-              <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors">
-                <div className="w-12 h-12 rounded-xl bg-[#1a1a1a] flex items-center justify-center text-2xl">
+              <div className={`flex items-center gap-4 p-3 rounded-xl transition-colors ${
+                safeTheme === 'dark' ? 'hover:bg-white/5' : 'hover:bg-zinc-50'
+              }`}>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${
+                  safeTheme === 'dark' ? 'bg-[#1a1a1a]' : 'bg-zinc-100'
+                }`}>
                   {education.logo}
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-semibold text-white">{education.school}</h4>
-                  <p className="text-sm text-gray-400">{education.degree}</p>
+                  <h4 className={`font-semibold ${safeTheme === 'dark' ? 'text-white' : 'text-zinc-900'}`}>
+                    {education.school}
+                  </h4>
+                  <p className={`text-sm ${safeTheme === 'dark' ? 'text-gray-400' : 'text-zinc-500'}`}>
+                    {education.degree}
+                  </p>
                 </div>
-                <div className="flex items-center gap-1 text-xs text-gray-500">
+                <div className={`flex items-center gap-1 text-xs ${safeTheme === 'dark' ? 'text-gray-500' : 'text-zinc-400'}`}>
                   <Calendar className="w-3 h-3" />
                   {education.period}
                 </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import SpotlightCard from "@/components/SpotlightCard";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface Skill {
   name: string;
@@ -16,56 +17,39 @@ interface SkillCategory {
 
 const skillCategories: SkillCategory[] = [
   {
+    name: "Mobile",
+    skills: [
+      { name: "Flutter", icon: "💙" },
+      { name: "Dart", icon: "🎯" },
+      { name: "Android", icon: "🤖" },
+      { name: "iOS", icon: "🍎" },
+      { name: "GetX", icon: "⚡" },
+      { name: "Provider", icon: "📦" },
+      { name: "BLoC", icon: "🧱" },
+      { name: "Riverpod", icon: "🌊" },
+    ],
+  },
+  {
     name: "Backend",
     skills: [
-      { name: "Node.js", icon: "⬢" },
-      { name: "TypeScript", icon: "🔷" },
-      { name: ".NET", icon: "🟣" },
-      { name: "C#", icon: "🎯" },
-      { name: "Laravel", icon: "🔶" },
-      { name: "PHP", icon: "🐘" },
-      { name: "Python", icon: "🐍" },
-      { name: "SQL", icon: "📊" },
-      { name: "PostgreSQL", icon: "🐘" },
-      { name: "MySQL", icon: "🐬" },
-      { name: "DynamoDB", icon: "📦" },
+      { name: "Firebase", icon: "🔥" },
       { name: "REST APIs", icon: "🔗" },
-      { name: "GraphQL", icon: "◈" },
+      { name: "Node.js", icon: "⬢" },
+      { name: "Python", icon: "🐍" },
+      { name: "MySQL", icon: "🐬" },
+      { name: "MongoDB", icon: "🍃" },
+      { name: "Supabase", icon: "⚡" },
     ],
   },
   {
-    name: "Frontend",
+    name: "UI/UX",
     skills: [
-      { name: "React", icon: "⚛️" },
-      { name: "Next.js", icon: "▲" },
-      { name: "Vue.js", icon: "💚" },
-      { name: "Tailwind CSS", icon: "🎨" },
-      { name: "HTML5", icon: "📄" },
-      { name: "CSS3", icon: "🎨" },
-      { name: "JavaScript", icon: "💛" },
-      { name: "Framer Motion", icon: "🔵" },
-    ],
-  },
-  {
-    name: "DevOps",
-    skills: [
-      { name: "AWS", icon: "☁️" },
-      { name: "Docker", icon: "🐳" },
-      { name: "Kubernetes", icon: "☸️" },
-      { name: "CI/CD", icon: "🔄" },
-      { name: "Terraform", icon: "🏗️" },
-      { name: "Linux", icon: "🐧" },
-    ],
-  },
-  {
-    name: "Practices",
-    skills: [
-      { name: "Agile/Scrum", icon: "📋" },
-      { name: "TDD", icon: "✅" },
-      { name: "Clean Code", icon: "✨" },
-      { name: "Code Review", icon: "👀" },
-      { name: "Documentation", icon: "📝" },
-      { name: "Performance", icon: "⚡" },
+      { name: "Material Design", icon: "🎨" },
+      { name: "Cupertino", icon: "📱" },
+      { name: "Animations", icon: "✨" },
+      { name: "Responsive UI", icon: "📐" },
+      { name: "Figma", icon: "🎯" },
+      { name: "Custom Widgets", icon: "🔧" },
     ],
   },
   {
@@ -73,16 +57,29 @@ const skillCategories: SkillCategory[] = [
     skills: [
       { name: "Git", icon: "📦" },
       { name: "VS Code", icon: "💻" },
-      { name: "Jira", icon: "📊" },
-      { name: "Figma", icon: "🎨" },
+      { name: "Android Studio", icon: "🤖" },
+      { name: "Xcode", icon: "🔨" },
       { name: "Postman", icon: "📮" },
-      { name: "Notion", icon: "📓" },
+      { name: "CI/CD", icon: "🔄" },
+    ],
+  },
+  {
+    name: "Practices",
+    skills: [
+      { name: "Clean Architecture", icon: "🏗️" },
+      { name: "SOLID Principles", icon: "✅" },
+      { name: "TDD", icon: "🧪" },
+      { name: "Code Review", icon: "👀" },
+      { name: "Agile/Scrum", icon: "📋" },
+      { name: "Performance", icon: "⚡" },
     ],
   },
 ];
 
 export default function Skills() {
   const [activeCategory, setActiveCategory] = useState(0);
+  const { theme } = useTheme();
+  const safeTheme = theme || "dark";
 
   return (
     <section id="skills" className="section">
@@ -94,10 +91,10 @@ export default function Skills() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl md:text-5xl font-bold mb-4">
+          <h2 className={`text-3xl md:text-5xl font-bold mb-4 ${safeTheme === 'dark' ? 'text-white' : 'text-zinc-900'}`}>
             My <span className="gradient-text">Skills</span>
           </h2>
-          <p className="text-gray-400 max-w-2xl mx-auto">
+          <p className={`max-w-2xl mx-auto ${safeTheme === 'dark' ? 'text-gray-400' : 'text-zinc-600'}`}>
             Technologies and tools I work with
           </p>
         </motion.div>
@@ -116,7 +113,9 @@ export default function Skills() {
               className={`relative px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                 activeCategory === index
                   ? "text-white"
-                  : "text-gray-400 hover:text-white"
+                  : safeTheme === 'dark' 
+                    ? "text-gray-400 hover:text-white" 
+                    : "text-zinc-500 hover:text-zinc-900"
               }`}
             >
               {activeCategory === index && (
@@ -151,7 +150,7 @@ export default function Skills() {
                 <SpotlightCard className="p-4">
                   <div className="flex flex-col items-center gap-3 text-center">
                     <span className="text-3xl">{skill.icon}</span>
-                    <span className="text-sm font-medium text-gray-300">
+                    <span className={`text-sm font-medium ${safeTheme === 'dark' ? 'text-gray-300' : 'text-zinc-700'}`}>
                       {skill.name}
                     </span>
                   </div>
