@@ -1,4 +1,4 @@
-import HexagonBackground from "@/components/HexagonBackground";
+import GeometricBackground from "@/components/GeometricBackground";
 import Navigation from "@/components/Navigation";
 import Hero from "@/sections/Hero";
 import About from "@/sections/About";
@@ -9,7 +9,7 @@ import Contact from "@/sections/Contact";
 export default function Home() {
   return (
     <>
-      <HexagonBackground />
+      <GeometricBackground />
       <Navigation />
       <main className="relative z-10">
         <Hero />

@@ -3,80 +3,67 @@
 import { motion } from "framer-motion";
 import { ArrowDown, Github, Linkedin, Mail, FileText } from "lucide-react";
 import Link from "next/link";
+import { PORTFOLIO_DATA } from "@/data/portfolio-data";
 
 export default function Hero() {
+  const { personalInfo, socialLinks } = PORTFOLIO_DATA;
+
   return (
     <section
       id="home"
       className="relative min-h-screen flex items-center justify-center px-4"
     >
       {/* Content */}
-      <div className="relative z-10 text-center max-w-4xl mx-auto">
+      <div className="relative z-10 text-center max-w-5xl mx-auto flex flex-col items-center justify-center">
         {/* Badge */}
+        {personalInfo.availableForWork && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/20 mb-8"
+          >
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-sm text-gray-300">Available for opportunities</span>
+          </motion.div>
+        )}
+
+        {/* Main heading */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/20 mb-8"
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="mb-6"
         >
-          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-sm text-gray-300">Available for opportunities</span>
+          <p className="text-lg md:text-xl text-gray-400 mb-2 font-light tracking-wide">
+            Hello World, I&apos;m
+          </p>
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold gradient-text">
+            {personalInfo.name}
+          </h1>
         </motion.div>
 
-        {/* Main heading */}
-        <motion.h1
+        {/* Role Badge */}
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6"
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className="mb-6"
         >
-          <span className="text-white">Hello World, I&apos;m</span>
-          <br />
-          <span className="gradient-text">Your Name</span>
-        </motion.h1>
+          <span className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-cyan-400 text-sm font-medium">
+            {personalInfo.role}
+          </span>
+        </motion.div>
 
-        {/* Subtitle */}
+        {/* Subtitle/Tagline */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-lg md:text-xl text-gray-400 mb-8 max-w-2xl mx-auto"
+          className="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl mx-auto font-light leading-relaxed"
         >
-          Full Stack Developer crafting elegant solutions with modern web technologies.
-          <br className="hidden md:block" />
-          Transforming ideas into scalable, performant applications.
+          {personalInfo.tagline}
         </motion.p>
-
-        {/* Code block decoration */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="hidden lg:block absolute right-0 top-1/2 -translate-y-1/2 w-96"
-        >
-          <div className="glass rounded-xl p-4 text-left font-mono text-sm">
-            <div className="text-purple-400">const developer = {"{"}</div>
-            <div className="ml-4">
-              <span className="text-cyan-400">name:</span>{" "}
-              <span className="text-green-400">&quot;Your Name&quot;</span>,
-            </div>
-            <div className="ml-4">
-              <span className="text-cyan-400">role:</span>{" "}
-              <span className="text-green-400">&quot;Full Stack Developer&quot;</span>,
-            </div>
-            <div className="ml-4">
-              <span className="text-cyan-400">skills:</span> [
-              <span className="text-yellow-400">&quot;TypeScript&quot;</span>,{" "}
-              <span className="text-yellow-400">&quot;React&quot;</span>,{" "}
-              <span className="text-yellow-400">&quot;Node.js&quot;</span>],
-            </div>
-            <div className="ml-4">
-              <span className="text-cyan-400">passion:</span>{" "}
-              <span className="text-green-400">&quot;Building amazing experiences&quot;</span>
-            </div>
-            <div className="text-purple-400">{"}"}</div>
-          </div>
-        </motion.div>
 
         {/* CTA Buttons */}
         <motion.div
@@ -107,23 +94,44 @@ export default function Hero() {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="flex items-center justify-center gap-4"
         >
-          {[
-            { icon: Github, href: "https://github.com", label: "GitHub" },
-            { icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
-            { icon: Mail, href: "mailto:your@email.com", label: "Email" },
-            { icon: FileText, href: "/resume.pdf", label: "Resume" },
-          ].map((social) => (
+          {socialLinks.find(s => s.platform === "GitHub") && (
             <Link
-              key={social.label}
-              href={social.href}
+              href={socialLinks.find(s => s.platform === "GitHub")?.url || "#"}
               target="_blank"
               rel="noopener noreferrer"
               className="p-3 glass rounded-full text-gray-400 hover:text-white hover:border-cyan-500/50 transition-all duration-300 hover:scale-110"
-              aria-label={social.label}
+              aria-label="GitHub"
             >
-              <social.icon className="w-5 h-5" />
+              <Github className="w-5 h-5" />
             </Link>
-          ))}
+          )}
+          {socialLinks.find(s => s.platform === "LinkedIn") && (
+            <Link
+              href={socialLinks.find(s => s.platform === "LinkedIn")?.url || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-3 glass rounded-full text-gray-400 hover:text-white hover:border-cyan-500/50 transition-all duration-300 hover:scale-110"
+              aria-label="LinkedIn"
+            >
+              <Linkedin className="w-5 h-5" />
+            </Link>
+          )}
+          <Link
+            href={`mailto:${personalInfo.email}`}
+            className="p-3 glass rounded-full text-gray-400 hover:text-white hover:border-cyan-500/50 transition-all duration-300 hover:scale-110"
+            aria-label="Email"
+          >
+            <Mail className="w-5 h-5" />
+          </Link>
+          <Link
+            href="/resume.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-3 glass rounded-full text-gray-400 hover:text-white hover:border-cyan-500/50 transition-all duration-300 hover:scale-110"
+            aria-label="Resume"
+          >
+            <FileText className="w-5 h-5" />
+          </Link>
         </motion.div>
       </div>
 
