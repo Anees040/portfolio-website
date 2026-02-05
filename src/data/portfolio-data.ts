@@ -71,29 +71,24 @@ export interface PortfolioData {
 
 export const PORTFOLIO_DATA: PortfolioData = {
   personalInfo: {
-    name: "Your Name", // e.g., "Anees Ahmed"
-    role: "Full Stack Developer", // e.g., "Software Engineer", "Frontend Developer"
-    tagline: "Building elegant solutions with modern web technologies", // Short one-liner
-    bio: "I'm a passionate developer with X years of experience building scalable web applications. I specialize in React, Node.js, and cloud technologies. I love turning complex problems into simple, beautiful solutions.", // 2-3 sentences about yourself
-    location: "Your City, Country", // e.g., "San Francisco, CA"
-    email: "your@email.com", // Your professional email
-    availableForWork: true, // Set to false if not looking for opportunities
+    name: "Muhammad Anees",
+    role: "Flutter Developer",
+    tagline: "Crafting beautiful cross-platform mobile experiences with Flutter & Dart",
+    bio: "I'm a passionate Flutter Developer specializing in building high-performance, cross-platform mobile applications. With expertise in Flutter, Dart, Firebase, and Node.js backend services, I create seamless user experiences that work flawlessly on both iOS and Android.",
+    location: "Your City, Country", // Update this
+    email: "your@email.com", // Update this
+    availableForWork: true,
   },
 
   socialLinks: [
     {
       platform: "GitHub",
-      url: "https://github.com/yourusername", // Your GitHub profile URL
-      username: "yourusername",
+      url: "https://github.com/Anees040",
+      username: "Anees040",
     },
     {
       platform: "LinkedIn",
-      url: "https://linkedin.com/in/yourusername", // Your LinkedIn profile URL
-      username: "yourusername",
-    },
-    {
-      platform: "Twitter",
-      url: "https://twitter.com/yourusername", // Your Twitter/X profile URL (optional)
+      url: "https://linkedin.com/in/yourusername", // Update this
       username: "yourusername",
     },
     // Add more social links as needed
@@ -101,14 +96,13 @@ export const PORTFOLIO_DATA: PortfolioData = {
 
   skills: [
     {
-      category: "Frontend",
+      category: "Mobile Development",
       skills: [
-        { name: "React" },
-        { name: "Next.js" },
-        { name: "TypeScript" },
-        { name: "Tailwind CSS" },
-        { name: "HTML/CSS" },
-        // Add more frontend skills
+        { name: "Flutter" },
+        { name: "Dart" },
+        { name: "iOS" },
+        { name: "Android" },
+        { name: "Responsive UI" },
       ],
     },
     {
@@ -116,31 +110,28 @@ export const PORTFOLIO_DATA: PortfolioData = {
       skills: [
         { name: "Node.js" },
         { name: "Express" },
-        { name: "Python" },
         { name: "REST APIs" },
-        { name: "GraphQL" },
-        // Add more backend skills
+        { name: "Firebase" },
+        { name: "Cloud Functions" },
       ],
     },
     {
       category: "Database",
       skills: [
+        { name: "Firebase Firestore" },
         { name: "PostgreSQL" },
         { name: "MongoDB" },
-        { name: "Redis" },
-        { name: "MySQL" },
-        // Add more database skills
+        { name: "SQLite" },
       ],
     },
     {
-      category: "DevOps & Tools",
+      category: "Tools & DevOps",
       skills: [
-        { name: "Git" },
-        { name: "Docker" },
-        { name: "AWS" },
+        { name: "Git & GitHub" },
+        { name: "Firebase" },
         { name: "CI/CD" },
-        { name: "Linux" },
-        // Add more DevOps/tools skills
+        { name: "App Store Deploy" },
+        { name: "Play Store Deploy" },
       ],
     },
   ],
@@ -148,51 +139,47 @@ export const PORTFOLIO_DATA: PortfolioData = {
   projects: [
     {
       id: "project-1",
-      title: "Project Name", // e.g., "E-Commerce Platform"
-      description: "Short description of what this project does and its key features.", // 1-2 sentences
-      longDescription: "More detailed description about the project, challenges solved, and impact.", // Optional: longer description
-      techStack: ["React", "Node.js", "PostgreSQL", "AWS"], // Technologies used
-      liveUrl: "https://yourproject.com", // Live demo URL (optional)
-      githubUrl: "https://github.com/yourusername/project", // GitHub repo URL (optional)
-      imageUrl: "/projects/project1.png", // Screenshot path (optional)
-      featured: true, // Set to true for main projects to highlight
-      year: "2024",
+      title: "Flutter Mobile App",
+      description: "A cross-platform mobile application built with Flutter showcasing modern UI/UX patterns and state management.",
+      techStack: ["Flutter", "Dart", "Firebase", "Provider"],
+      githubUrl: "https://github.com/Anees040/project1",
+      featured: true,
+      year: "2025",
     },
     {
       id: "project-2",
-      title: "Second Project",
-      description: "Description of your second project.",
-      techStack: ["Next.js", "TypeScript", "Prisma"],
-      githubUrl: "https://github.com/yourusername/project2",
+      title: "E-Commerce App",
+      description: "Full-featured e-commerce mobile app with payment integration and real-time inventory updates.",
+      techStack: ["Flutter", "Node.js", "MongoDB", "Stripe"],
+      githubUrl: "https://github.com/Anees040/project2",
       featured: true,
       year: "2024",
     },
     {
       id: "project-3",
-      title: "Third Project",
-      description: "Description of your third project.",
-      techStack: ["Python", "FastAPI", "Docker"],
-      liveUrl: "https://project3.com",
-      githubUrl: "https://github.com/yourusername/project3",
+      title: "Chat Application",
+      description: "Real-time messaging app with Firebase backend and push notifications.",
+      techStack: ["Flutter", "Firebase", "Cloud Messaging"],
+      githubUrl: "https://github.com/Anees040/project3",
       featured: false,
-      year: "2023",
+      year: "2024",
     },
     // Add more projects as needed
   ],
 
   experience: [
     {
-      company: "Company Name", // e.g., "Google", "Startup Inc."
-      role: "Software Engineer", // Your job title
-      period: "Jan 2024 - Present", // Employment period
-      description: "Brief description of your responsibilities and achievements.", // Optional
-      logo: "🏢", // Emoji or path to company logo
+      company: "Company Name",
+      role: "Flutter Developer",
+      period: "Jan 2024 - Present",
+      description: "Building cross-platform mobile applications with Flutter.",
+      logo: "📱",
     },
     {
       company: "Previous Company",
-      role: "Junior Developer",
+      role: "Mobile Developer",
       period: "Jun 2022 - Dec 2023",
-      description: "What you did at this company.",
+      description: "Developed and maintained Flutter applications.",
       logo: "💼",
     },
     // Add more experience entries
@@ -200,9 +187,9 @@ export const PORTFOLIO_DATA: PortfolioData = {
 
   education: [
     {
-      institution: "University Name", // e.g., "MIT", "Stanford University"
-      degree: "Bachelor's", // e.g., "Bachelor's", "Master's"
-      field: "Computer Science", // e.g., "Computer Science", "Software Engineering"
+      institution: "Your University",
+      degree: "Bachelor's",
+      field: "Computer Science",
       period: "2018 - 2022",
       logo: "🎓",
     },
